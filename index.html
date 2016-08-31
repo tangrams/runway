@@ -35,11 +35,6 @@
                 margin: 0px;
                 padding: 0px;
             }
-
-            .cover {
-                margin: 0px;
-                padding: 1px;
-            }
         </style>
 
     </head>
@@ -97,7 +92,6 @@
                 window.location.href = updateQuery('scene',e.value);
             }
 
-
             $(function(){
                 var STYLE = 'https://tangrams.github.io/tangram-sandbox/styles/default.yaml';
                 var PAPARAZI_SERVER = '52.90.135.245';
@@ -112,15 +106,6 @@
                 input.value = STYLE;
 
                 var cities = [];
-
-                function sleep (milliseconds) {
-                    var start = new Date().getTime();
-                    for (var i = 0; i < 1e7; i++) {
-                        if ((new Date().getTime() - start) > milliseconds){
-                            break;
-                        }
-                    }
-                }
 
                 Papa.parse("data/world_cities.csv", {
                     download: true,
@@ -160,10 +145,14 @@
                         var url = 'https://'+PAPARAZI_SERVER+'/?zoom='+zoom+'&lat='+lat+'&lon='+lon+'&width='+width+'&height='+height+'&scene='+STYLE
                         var link_url = 'http://tangrams.github.io/tangram-frame/?url='+STYLE+'#'+zoom+'/'+lat+'/'+lon;
 
+                        var a = document.createElement('a');
+                        a.href = link_url;
+                        a.target = '_blank';
                         var downloadingImage = new Image();
                         downloadingImage.crossOrigin= "anonymous";
                         downloadingImage.onload = () => {
-                            wall.prepend(downloadingImage);
+                            a.appendChild(downloadingImage);
+                            wall.prepend(a);
                             wall.fillHoles();
                             wall.fitWidth();
                             console.log("finish");
@@ -173,16 +162,8 @@
                         downloadingImage.className = "brick";
                         console.log("calling", url);
                         downloadingImage.src = url;
-
-                        // wall.prepend('<div class="brick" style="width:'+width+'px;height:'+height+'px;"><a href="'+link_url+'" target="_blank"><img class="cover" src="'+url+'" alt="'+name+'"/></a></div>');
-                        //console.log(url);
                     } 
-                    
-                    // sleep(1000);
-                    // window.requestAnimationFrame(step);
                 }
-
-                // window.requestAnimationFrame(step);
                 window.cities = cities;
             })
 
