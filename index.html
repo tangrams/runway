@@ -34,6 +34,12 @@
             .brick {
                 margin: 0px;
                 padding: 0px;
+                overflow: hidden;
+            }
+
+            img {
+                object-fit: cover;
+                object-position: center;
             }
         </style>
 
@@ -71,10 +77,10 @@
                     download: true,
                     delimiter: ",",
                     newline: "\n",
-                    error: (err, file, inputElem, reason) => {
+                    error: function (err, file, inputElem, reason) {
                         console.log("Error:", err, file, inputElem, reason);
                     },
-                    complete: (results, file) => {
+                    complete: function (results, file) {
                         // console.log("Parsing complete:", results, file);
                         cities = results.data;
                         step();
@@ -94,7 +100,7 @@
                     }
                 });
 
-                step = () => {
+                var step = function () {
                     if (cities.length > 0) {
                         var index = Math.floor(1.+(Math.random()*cities.length-2));
                         var name = cities[index][1];
@@ -104,22 +110,33 @@
                         var width = Math.floor(1+Math.random()*(WIDTH_MAX/WIDTH_CELL))*WIDTH_CELL;
                         var height = Math.floor(1+Math.random()*(HEIGHT_MAX/HEIGHT_CELL))*HEIGHT_CELL;
 
-                        var url = 'https://'+PAPARAZI_SERVER+'/?zoom='+zoom+'&lat='+lat+'&lon='+lon+'&width='+width+'&height='+height+'&scene='+STYLE
+                        var url = 'https://'+PAPARAZI_SERVER+'/?zoom='+zoom+'&lat='+lat+'&lon='+lon+'&width='+width*window.devicePixelRatio+'&height='+height*window.devicePixelRatio+'&scene='+STYLE
                         var link_url = 'http://tangrams.github.io/tangram-frame/?url='+STYLE+'#'+zoom+'/'+lat+'/'+lon;
 
                         var a = document.createElement('a');
                         a.href = link_url;
                         a.target = '_blank';
+                        var div = document.createElement('div');
+                        div.className = "block"
+                        div.style.width = width;
+                        div.style.height = height;
+                        
                         var downloadingImage = new Image();
                         downloadingImage.crossOrigin= "anonymous";
-                        downloadingImage.onload = () => {
+
+                        downloadingImage.onload = function () {
                             speed = Date.now() - speed_start;
                             speed /= width*height;
                             speed_average += (speed-speed_average)*0.1;
                             console.log("~" + speed_average.toString() + " milliseconds per pixel");
 
+                            downloadingImage.style.width = width+"px";
+                            downloadingImage.style.height = height+"px";
+
                             a.appendChild(downloadingImage);
-                            wall.prepend(a);
+                            div.appendChild(a);
+                            wall.prepend(div);
+
                             // wall.fitZone();
                             wall.fillHoles();
                             wall.fitWidth();
