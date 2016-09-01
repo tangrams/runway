@@ -46,6 +46,94 @@
 
         <!-- Demo module -->
         <script type="text/javascript">
+            $(function(){
+                var STYLE = 'https://tangrams.github.io/tangram-sandbox/styles/default.yaml';
+                var PAPARAZI_SERVER = '52.90.135.245';
+                var WIDTH_CELL = 100;
+                var WIDTH_MAX = 1000;
+                var HEIGHT_CELL = 100;
+                var HEIGHT_MAX = 400;
+                var ZOOM_MIN = 3;
+                var ZOOM_MAX = 20;
+
+                var query = parseQuery(window.location.search.slice(1));
+                if (query['scene']) {
+                    STYLE = query['scene'];
+                }
+                var input = document.getElementById('url_input');
+                input.value = STYLE;
+                var cities = [];
+                var speed = 0;
+                var speed_average = 0.1;
+                var speed_start = 0.;
+
+                Papa.parse("data/world_cities.csv", {
+                    download: true,
+                    delimiter: ",",
+                    newline: "\n",
+                    error: (err, file, inputElem, reason) => {
+                        console.log("Error:", err, file, inputElem, reason);
+                    },
+                    complete: (results, file) => {
+                        // console.log("Parsing complete:", results, file);
+                        cities = results.data;
+                        step();
+                    }
+                });
+
+                var wall = new Freewall("#freewall");
+                wall.reset({
+                    selector: '.brick',
+                    animate: true,
+                    cellW: WIDTH_CELL,
+                    cellH: HEIGHT_CELL,
+                    gutterX: 5,
+                    gutterY: 5,
+                    onResize: function() {
+                        wall.fitWidth();
+                    }
+                });
+
+                step = () => {
+                    if (cities.length > 0) {
+                        var index = Math.floor(1.+(Math.random()*cities.length-2));
+                        var name = cities[index][1];
+                        var lat = cities[index][2];
+                        var lon = cities[index][3];
+                        var zoom = ZOOM_MIN+Math.random()*(ZOOM_MAX-ZOOM_MIN);
+                        var width = Math.floor(1+Math.random()*(WIDTH_MAX/WIDTH_CELL))*WIDTH_CELL;
+                        var height = Math.floor(1+Math.random()*(HEIGHT_MAX/HEIGHT_CELL))*HEIGHT_CELL;
+
+                        var url = 'https://'+PAPARAZI_SERVER+'/?zoom='+zoom+'&lat='+lat+'&lon='+lon+'&width='+width+'&height='+height+'&scene='+STYLE
+                        var link_url = 'http://tangrams.github.io/tangram-frame/?url='+STYLE+'#'+zoom+'/'+lat+'/'+lon;
+
+                        var a = document.createElement('a');
+                        a.href = link_url;
+                        a.target = '_blank';
+                        var downloadingImage = new Image();
+                        downloadingImage.crossOrigin= "anonymous";
+                        downloadingImage.onload = () => {
+                            speed = Date.now() - speed_start;
+                            speed /= width*height;
+                            speed_average += (speed-speed_average)*0.1;
+                            console.log("~" + speed_average.toString() + " milliseconds per pixel");
+
+                            a.appendChild(downloadingImage);
+                            wall.prepend(a);
+                            // wall.fitZone();
+                            wall.fillHoles();
+                            wall.fitWidth();
+                            window.requestAnimationFrame(step);
+                        };
+
+                        downloadingImage.className = "brick";
+                        speed_start = Date.now();
+                        downloadingImage.src = url;
+                    } 
+                }
+                window.cities = cities;
+            })
+
             function parseQuery (qstr) {
                 var query = {};
                 var a = qstr.split('&');
@@ -86,88 +174,10 @@
                 }
             }
 
-            // Every time someone change the URL to the .yaml scene file
             function newURL(e) {
                 var style = e.value;
                 window.location.href = updateQuery('scene',e.value);
             }
-
-            $(function(){
-                var STYLE = 'https://tangrams.github.io/tangram-sandbox/styles/default.yaml';
-                var PAPARAZI_SERVER = '52.90.135.245';
-                var WIDTH_MULTIPLIER = 100;
-                var HEIGHT_MULTIPLIER = 100;
-
-                var query = parseQuery(window.location.search.slice(1));
-                if (query['scene']) {
-                    STYLE = query['scene'];
-                }
-                var input = document.getElementById('url_input');
-                input.value = STYLE;
-
-                var cities = [];
-
-                Papa.parse("data/world_cities.csv", {
-                    download: true,
-                    delimiter: ",",
-                    newline: "\n",
-                    error: (err, file, inputElem, reason) => {
-                        console.log("Error:", err, file, inputElem, reason);
-                    },
-                    complete: (results, file) => {
-                        // console.log("Parsing complete:", results, file);
-                        cities = results.data;
-                        step();
-                    }
-                });
-
-                var wall = new Freewall("#freewall");
-                wall.reset({
-                    selector: '.brick',
-                    animate: true,
-                    cellW: WIDTH_MULTIPLIER,
-                    cellH: HEIGHT_MULTIPLIER,
-                    gutterX: 5,
-                    gutterY: 5,
-                    onResize: function() {
-                        wall.fitWidth();
-                    }
-                });
-
-                step = () => {
-                    if (cities.length > 0) {
-                        var index = Math.floor(1.+(Math.random()*cities.length-2));
-                        var name = cities[index][1];
-                        var lat = cities[index][2];
-                        var lon = cities[index][3];
-                        var zoom = 5+Math.random()*13;
-                        var width = Math.floor(1+Math.random()*4)*WIDTH_MULTIPLIER;
-                        var height = Math.floor(1+Math.random()*4)*HEIGHT_MULTIPLIER;
-
-                        var url = 'https://'+PAPARAZI_SERVER+'/?zoom='+zoom+'&lat='+lat+'&lon='+lon+'&width='+width+'&height='+height+'&scene='+STYLE
-                        var link_url = 'http://tangrams.github.io/tangram-frame/?url='+STYLE+'#'+zoom+'/'+lat+'/'+lon;
-
-                        var a = document.createElement('a');
-                        a.href = link_url;
-                        a.target = '_blank';
-                        var downloadingImage = new Image();
-                        downloadingImage.crossOrigin= "anonymous";
-                        downloadingImage.onload = () => {
-                            a.appendChild(downloadingImage);
-                            wall.prepend(a);
-                            // wall.fitZone();
-                            wall.fillHoles();
-                            wall.fitWidth();
-                            window.requestAnimationFrame(step);
-                        };
-
-                        downloadingImage.className = "brick";
-                        downloadingImage.src = url;
-                    } 
-                }
-                window.cities = cities;
-            })
-
         </script>
     </body>
 </html>
