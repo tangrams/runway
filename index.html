@@ -110,7 +110,7 @@
                         var width = Math.floor(1+Math.random()*(WIDTH_MAX/WIDTH_CELL))*WIDTH_CELL;
                         var height = Math.floor(1+Math.random()*(HEIGHT_MAX/HEIGHT_CELL))*HEIGHT_CELL;
 
-                        var url = 'https://'+PAPARAZI_SERVER+'/?zoom='+zoom+'&lat='+lat+'&lon='+lon+'&width='+width*window.devicePixelRatio+'&height='+height*window.devicePixelRatio+'&scene='+STYLE
+                        var url = 'https://'+PAPARAZI_SERVER+'/?zoom='+zoom+'&lat='+lat+'&lon='+lon+'&width='+width+'&height='+height+'&scene='+STYLE
                         var link_url = 'http://tangrams.github.io/tangram-frame/?url='+STYLE+'#'+zoom+'/'+lat+'/'+lon;
 
                         var a = document.createElement('a');
@@ -129,9 +129,6 @@
                             speed /= width*height;
                             speed_average += (speed-speed_average)*0.1;
                             console.log("~" + speed_average.toString() + " milliseconds per pixel");
-
-                            downloadingImage.style.width = width+"px";
-                            downloadingImage.style.height = height+"px";
 
                             a.appendChild(downloadingImage);
                             div.appendChild(a);
